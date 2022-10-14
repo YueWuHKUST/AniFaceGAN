@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+
+<html>
+
+<head lang="en">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+    <title>AniFaceGAN</title>
+
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="./files/bootstrap.min.css">
+    <link rel="stylesheet" href="./files/font-awesome.min.css">
+    <link rel="stylesheet" href="./files/codemirror.min.css">
+    <link rel="stylesheet" href="./files/app.css">
+
+
+
+
+</head>
+
+<body>
+    <div class="container" id="main">
+        <div class="row">
+            <h1 class="col-md-20 text-center">
+                <br></br>
+                <b>AniFaceGAN</b>: Animatable 3D-Aware Face Image Generation for Video Avatars <br>
+                <small>
+                    NeurIPS 2022
+                </small>
+            </h1>
+            <hr style="margin-top:0px">
+        </div>
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <ul class="list-inline">
+					<li>
+                        <a href="https://yuewuhkust.github.io/" style="font-size: 16px;">
+                            Yue Wu
+                        </a>
+                        <sup>1</sup>
+                    </li>
+                    <li>
+                        <a href="https://yudeng.github.io/" style="font-size: 16px;">
+                            Yu Deng
+                        </a>
+                        <sup>2</sup>
+                    </li>
+					          <li>
+                        <a href="https://jlyang.org/" style="font-size: 16px;">
+                            Jiaolong Yang
+                        </a>
+                        <sup>3</sup>
+                    </li>
+                    <li>
+                        <a href="https://scholar.google.com/citations?user=-ncz2s8AAAAJ&hl=en" style="font-size: 16px;">
+                            Fangyun Wei
+                        </a>
+                        <sup>3</sup>
+                    </li>
+                    <li>
+                        <a href="https://cqf.io/" style="font-size: 16px;">
+                            Qifeng Chen
+                        </a>
+                        <sup>1</sup>
+                    </li>
+                    <li>
+                        <a href="http://www.xtong.info/" style="font-size: 16px;">
+                            Xin Tong
+                        </a>
+                        <sup>3</sup>
+                    </li><br>
+                    <a></a><br>
+			<li>
+                        <sup>1</sup>
+                        <a href="https://hkust.edu.hk/" style="font-size: 16px;">
+                            Hong Kong University of Science and Technology
+                        </a>
+                        </li>
+			<li>
+                        <sup>2</sup>
+                        <a href="https://www.tsinghua.edu.cn/en/"
+                            style="font-size: 16px;">
+                             Tsinghua Unviersity
+                        </a>
+			<li>
+                        <sup>3</sup>
+                        <a href="https://www.microsoft.com/en-us/research/lab/microsoft-research-asia/"
+                            style="font-size: 16px;">
+                            Microsoft Research
+                        </a>
+                    </li>
+                    <li>
+              
+                    </li>
+                </ul>
+            </div>
+        </div>
+		
+		<br />
+		<div class="row">
+		<div class="col-md-12 text-center">
+<!-- 			<a href="https://arxiv.org/abs/2206.07255" target="blank"><span style="text-decoration:underline;font-size:20px">arXiv:2206.07255</span></a> -->
+		</div>
+		</div>
+
+
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4 text-center">
+                <ul class="nav nav-pills nav-justified">
+                    <li>
+                        <a href="https://arxiv.org/pdf/2210.06465.pdf">
+                            <img src="./files/paper.png" height="60px">
+                            <h4><strong>Paper</strong></h4>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="https://arxiv.org/abs/2210.06465">
+                            <img src="./files/arxiv.png" height="60px">
+                            <h4><strong>ArXiv</strong></h4>
+                        </a>
+                    </li>
+
+<!--                     <li>
+                        <a onClick="alert('Code coming soon!\nContact t-yudeng@microsoft.com for more details.')">
+                            <img src="./files/github.png" height="60px">
+                            <h4><strong>Code</strong></h4>
+                        </a>
+                    </li> -->
+                </ul>
+            </div>
+        </div>
+	
+        <div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+			<!--
+                <a>
+                    <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
+                        <source src="./files/teaser.mp4" type="video/mp4">
+                    </video>
+                </a>
+			-->
+                <br></br>
+			
+                <h2>
+                    Abstract
+                </h2>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    Although 2D generative models have made great progress in face image generation and animation, they often suffer from undesirable artifacts such as 3D inconsistency when rendering images from different camera viewpoints. This prevents them from synthesizing video animations indistinguishable from real ones. Recently, 3D-aware GANs extend 2D GANs for explicit disentanglement of camera pose by leveraging 3D scene representations. These methods can well preserve the 3D consistency of the generated images across different views, yet they cannot achieve fine-grained control over other attributes, among which facial expression control is arguably the most useful and desirable for face animation.
+In this paper, we propose an animatable 3D-aware GAN for multiview consistent face animation generation. The key idea is to decompose the 3D representation of the 3D-aware GAN into a template field and a deformation field, where the former represents different identities with a canonical expression, and the latter characterizes expression variations of each identity. To achieve meaningful control over facial expressions via deformation, we propose a 3D-level imitative learning scheme between the generator and a parametric 3D face model during adversarial training of the 3D-aware GAN. This helps our method achieve high-quality animatable face image generation with strong visual 3D consistency, even though trained with only unstructured 2D images. Extensive experiments demonstrate our superior performance over prior works. 
+Project page: <a href="https://yuewuhkust.github.io/AniFaceGAN"> https://yuewuhkust.github.io/AniFaceGAN. </a>
+                </p>
+            </div>
+        </div>
+
+<!--         <div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <br></br>
+                <h2>
+                    Video
+                </h2>
+                <hr style="margin-top:0px">
+                <div class="text-center">
+                    <div style="position:relative;padding-top:56.25%;">
+                        <iframe src="https://www.youtube.com/embed/Uqzs4uN6v8M" allowfullscreen=""
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div> -->
+        <div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <br></br>
+                <h2>
+                    Overview
+                </h2>
+                <hr style="margin-top:0px">
+                <img src="./files/Overview.png" class="img-responsive" alt="overview"><br>
+                <p class="text-justify" style="font-size: 16px;">
+                    Our proposed framework which consists of a template radiance field and an expression-driven deformation field for animatable 3D-aware face image generation.
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <br></br>
+                <h2>
+                    Virtual talking faces driven by real videos
+                </h2>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    
+                </p>
+                <video style="width:100%;height:100%;" playsinline controls muted>
+                    <source src="./files/video_1_1.mp4" type="video/mp4">
+                </video>
+                
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                </p>
+                <video style="width:100%;height:100%;" playsinline controls muted>
+                    <source src="./files/video_1_2.mp4" type="video/mp4">
+                </video>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                </p>
+                <video style="width:100%;height:100%;" playsinline controls muted>
+                    <source src="./files/video_1_3.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <br></br>
+                <h2>
+                    Comparison with DiscoFaceGAN
+                </h2>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    
+                </p>
+                <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
+                    <source src="./files/video_result2.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <br></br>
+                <h2>
+                    Controability
+                </h2>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    
+                </p>
+                <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
+                    <source src="./files/video_result3.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <br></br>
+                <h2>
+                    Real Image Embedding and Editing
+                </h2>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    
+                </p>
+                <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
+                    <source src="./files/video_4.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <br></br>
+                <h2>
+                    Comparison with 2D Editing
+                </h2>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    
+                </p>
+                <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
+                    <source src="./files/video_consistency.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <br></br>
+                <h2>
+                    Videos with audio 
+                </h2>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    
+                </p>
+                <video style="width:100%;height:100%;" playsinline controls>
+                    <source src="./files/video_audio_real_youtube.mp4" type="video/mp4">
+                </video>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    
+                </p>
+                <video style="width:100%;height:100%;" playsinline controls>
+                    <source src="./files/video_audio_1.mp4" type="video/mp4">
+                </video>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    
+                </p>
+                <video style="width:100%;height:100%;" playsinline controls>
+                    <source src="./files/video_audio_2.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 col-md-offset-0">
+                <div class="text-center">
+                    <h2>
+                        Citation
+                    </h2>
+                </div>
+                <hr style="margin-top:0px">
+                <div class="form-group col-md-12 col-md-offset-0">
+                    <div class="CodeMirror cm-s-default CodeMirror-wrap" style="font-size: 16px;">
+                        <div
+                            style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 4px; left: 4px; ">
+                            <textarea autocorrect="off" autocapitalize="off" spellcheck="false"
+                                style="position: absolute; padding: 0px; width: 1000px; height: 1em; outline: none;"
+                                tabindex="0"></textarea></div>
+                        <div class="CodeMirror-vscrollbar" cm-not-content="true">
+                            <div style="min-width: 1px; height: 0px;"></div>
+                        </div>
+                        <div class="CodeMirror-hscrollbar" cm-not-content="true">
+                            <div style="height: 100%; min-height: 1px; width: 0px;"></div>
+                        </div>
+                        <div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div>
+                        <div class="CodeMirror-gutter-filler" cm-not-content="true"></div>
+                        <div class="CodeMirror-scroll" tabindex="-1">
+                            <div class="CodeMirror-sizer"
+                                style="margin-left: 0px; margin-bottom: -17px; border-right-width: 13px; min-height: 162px; padding-right: 0px; padding-bottom: 0px;">
+                                <div style="position: relative; top: 0px;">
+                                    <div class="CodeMirror-lines">
+                                        <div style="position: relative; outline: none;">
+                                            <div class="CodeMirror-measure">AخA</div>
+                                            <div class="CodeMirror-measure"></div>
+                                            <div style="position: relative; z-index: 1;"></div>
+                                            <div class="CodeMirror-cursors">
+                                                <div class="CodeMirror-cursor"
+                                                    style="left: 4px; top: 0px; height: 17.1406px;">&nbsp;</div>
+                                            </div>
+                                            <div class="CodeMirror-code" style="">
+                                                <pre
+                                                    class=" CodeMirror-line "><span style="padding-right: 0.1px;">@inproceedings{yue2022anifacegan,</span></pre>
+                                                <pre
+                                                    class=" CodeMirror-line "><span style="padding-right: 0.1px;"> &nbsp;  title={AniFaceGAN: Animatable 3D-Aware Face Image Generation for Video Avatars},</span></pre>
+                                                <pre
+                                                    class=" CodeMirror-line "><span style="padding-right: 0.1px;"> &nbsp;  author={Wu, Yue and Deng, Yu and Yang, Jiaolong and Wei, Fangyun and Chen Qifeng and Tong, Xin},</span></pre>
+                                                <pre
+                                                    class=" CodeMirror-line "><span style="padding-right: 0.1px;"> &nbsp;  booktitle={Advances in Neural Information Processing Systems},</span></pre>
+                                                <pre
+                                                    class=" CodeMirror-line "><span style="padding-right: 0.1px;"> &nbsp;  year={2022}</span></pre>
+                                                <pre
+                                                    class=" CodeMirror-line "><span style="padding-right: 0.1px;">}</span></pre>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="position: absolute; height: 13px; width: 1px; top: 280px;"></div>
+                            <div class="CodeMirror-gutters" style="display: none; height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <br></br>
+				<!--
+                <h2>
+                    Acknowledgements
+                </h2>
+				-->
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    The website template was adapted from <a href="https://yudeng.github.io/GRAM/">GRAM</a> and <a href="https://jonbarron.info/mipnerf/">Mip-NeRF</a>.
+                </p>
+            </div>
+        </div>
+
+        
+
+
+</body>
+
+</html>
+
+
