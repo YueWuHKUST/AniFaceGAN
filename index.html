@@ -27,7 +27,7 @@
         <div class="row">
             <h1 class="col-md-20 text-center">
                 <br></br>
-                <b>AniFaceGAN</b>: Animatable 3D-Aware Face Image Generation for Video Avatars <br>
+                <b>AniFaceGAN</b>: Animatable 3D-Aware Face Image Generation <br> for Video Avatars <br>
                 <small>
                     NeurIPS 2022
                 </small>
@@ -135,28 +135,7 @@
             </div>
         </div>
 	
-        <div class="row">
-            <div class="col-md-12 col-md-offset-0 text-center">
-			<!--
-                <a>
-                    <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
-                        <source src="./files/teaser.mp4" type="video/mp4">
-                    </video>
-                </a>
-			-->
-                <br></br>
-			
-                <h2>
-                    Abstract
-                </h2>
-                <hr style="margin-top:0px">
-                <p class="text-justify" style="font-size: 16px;">
-                    Although 2D generative models have made great progress in face image generation and animation, they often suffer from undesirable artifacts such as 3D inconsistency when rendering images from different camera viewpoints. This prevents them from synthesizing video animations indistinguishable from real ones. Recently, 3D-aware GANs extend 2D GANs for explicit disentanglement of camera pose by leveraging 3D scene representations. These methods can well preserve the 3D consistency of the generated images across different views, yet they cannot achieve fine-grained control over other attributes, among which facial expression control is arguably the most useful and desirable for face animation.
-In this paper, we propose an animatable 3D-aware GAN for multiview consistent face animation generation. The key idea is to decompose the 3D representation of the 3D-aware GAN into a template field and a deformation field, where the former represents different identities with a canonical expression, and the latter characterizes expression variations of each identity. To achieve meaningful control over facial expressions via deformation, we propose a 3D-level imitative learning scheme between the generator and a parametric 3D face model during adversarial training of the 3D-aware GAN. This helps our method achieve high-quality animatable face image generation with strong visual 3D consistency, even though trained with only unstructured 2D images. Extensive experiments demonstrate our superior performance over prior works. 
-Project page: <a href="https://yuewuhkust.github.io/AniFaceGAN"> https://yuewuhkust.github.io/AniFaceGAN. </a>
-                </p>
-            </div>
-        </div>
+        
 
 <!--         <div class="row">
             <div class="col-md-12 col-md-offset-0 text-center">
@@ -173,11 +152,49 @@ Project page: <a href="https://yuewuhkust.github.io/AniFaceGAN"> https://yuewuhk
                 </div>
             </div>
         </div> -->
-        <div class="row">
+		
+		<div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <!--<br></br>
+                <h2>
+                    Virtual face generation with expression and viewpoint control 
+                </h2>
+                <hr style="margin-top:0px">-->
+                <p class="text-justify" style="font-size: 16px;">
+                    
+                </p>
+                <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
+                    <source src="./files/control.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+		
+		<div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+			<!--
+                <a>
+                    <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
+                        <source src="./files/teaser.mp4" type="video/mp4">
+                    </video>
+                </a>
+			-->
+                <br></br>
+			
+                <h2>
+                    Abstract
+                </h2>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    Although 2D generative models have made great progress in face image generation and animation, they often suffer from undesirable artifacts such as 3D inconsistency when rendering images from different camera viewpoints. This prevents them from synthesizing video animations indistinguishable from real ones. Recently, 3D-aware GANs extend 2D GANs for explicit disentanglement of camera pose by leveraging 3D scene representations. These methods can well preserve the 3D consistency of the generated images across different views, yet they cannot achieve fine-grained control over other attributes, among which facial expression control is arguably the most useful and desirable for face animation. In this paper, we propose an animatable 3D-aware GAN for multiview consistent face animation generation. The key idea is to decompose the 3D representation of the 3D-aware GAN into a template field and a deformation field, where the former represents different identities with a canonical expression, and the latter characterizes expression variations of each identity. To achieve meaningful control over facial expressions via deformation, we propose a 3D-level imitative learning scheme between the generator and a parametric 3D face model during adversarial training of the 3D-aware GAN. This helps our method achieve high-quality animatable face image generation with strong visual 3D consistency, even though trained with only unstructured 2D images. Extensive experiments demonstrate our superior performance over prior works.
+                </p>
+            </div>
+        </div>
+		
+		<div class="row">
             <div class="col-md-12 col-md-offset-0 text-center">
                 <br></br>
                 <h2>
-                    Overview
+                    Method overview
                 </h2>
                 <hr style="margin-top:0px">
                 <img src="./files/Overview.png" class="img-responsive" alt="overview"><br>
@@ -197,21 +214,22 @@ Project page: <a href="https://yuewuhkust.github.io/AniFaceGAN"> https://yuewuhk
                 <p class="text-justify" style="font-size: 16px;">
                     
                 </p>
-                <video style="width:100%;height:100%;" playsinline controls muted>
-                    <source src="./files/video_1_1.mp4" type="video/mp4">
+                <video style="width:100%;height:100%;" playsinline autoplay loop preload controls muted>
+                    <source src="./files/talkingface_1.mp4" type="video/mp4">
                 </video>
                 
-                <hr style="margin-top:0px">
+                <!--<hr style="margin-top:0px">
                 <p class="text-justify" style="font-size: 16px;">
                 </p>
                 <video style="width:100%;height:100%;" playsinline controls muted>
-                    <source src="./files/video_1_2.mp4" type="video/mp4">
-                </video>
+                    <source src="./files/talkingface_2.mp4" type="video/mp4">
+                </video>-->
+				
                 <hr style="margin-top:0px">
                 <p class="text-justify" style="font-size: 16px;">
                 </p>
-                <video style="width:100%;height:100%;" playsinline controls muted>
-                    <source src="./files/video_1_3.mp4" type="video/mp4">
+                <video style="width:100%;height:100%;" playsinline autoplay loop preload controls muted>
+                    <source src="./files/talkingface_3.mp4" type="video/mp4">
                 </video>
             </div>
         </div>
@@ -226,8 +244,24 @@ Project page: <a href="https://yuewuhkust.github.io/AniFaceGAN"> https://yuewuhk
                 <p class="text-justify" style="font-size: 16px;">
                     
                 </p>
-                <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
-                    <source src="./files/video_result2.mp4" type="video/mp4">
+                <video style="width:100%;height:100%;" playsinline autoplay loop preload controls muted>
+                    <source src="./files/compare_discofacegan.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+		
+		<div class="row">
+            <div class="col-md-12 col-md-offset-0 text-center">
+                <br></br>
+                <h2>
+                    Comparison with 2D GAN (StyleGAN) inversion and editing
+                </h2>
+                <hr style="margin-top:0px">
+                <p class="text-justify" style="font-size: 16px;">
+                    
+                </p>
+                <video style="width:100%;height:100%;" playsinline autoplay loop preload controls muted>
+                    <source src="./files/compare_2dgan.mp4" type="video/mp4">
                 </video>
             </div>
         </div>
@@ -236,68 +270,18 @@ Project page: <a href="https://yuewuhkust.github.io/AniFaceGAN"> https://yuewuhk
             <div class="col-md-12 col-md-offset-0 text-center">
                 <br></br>
                 <h2>
-                    Controability
+                    Real image embedding and editing
                 </h2>
                 <hr style="margin-top:0px">
                 <p class="text-justify" style="font-size: 16px;">
                     
                 </p>
-                <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
-                    <source src="./files/video_result3.mp4" type="video/mp4">
+                <video style="width:100%;height:100%;" playsinline autoplay loop preload controls muted>
+                    <source src="./files/embedding.mp4" type="video/mp4">
                 </video>
             </div>
         </div>
-
-        <div class="row">
-            <div class="col-md-12 col-md-offset-0 text-center">
-                <br></br>
-                <h2>
-                    Real Image Embedding and Editing
-                </h2>
-                <hr style="margin-top:0px">
-                <p class="text-justify" style="font-size: 16px;">
-                    
-                </p>
-                <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
-                    <source src="./files/video_4.mp4" type="video/mp4">
-                </video>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12 col-md-offset-0 text-center">
-                <br></br>
-                <h2>
-                    Comparison with 2D Editing
-                </h2>
-                <hr style="margin-top:0px">
-                <p class="text-justify" style="font-size: 16px;">
-                    
-                </p>
-                <video style="width:100%;height:100%;" playsinline autoplay loop preload muted>
-                    <source src="./files/video_consistency.mp4" type="video/mp4">
-                </video>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12 col-md-offset-0 text-center">
-                <br></br>
-                <h2>
-                    Videos with audio 
-                </h2>
-                <hr style="margin-top:0px">
-                <p class="text-justify" style="font-size: 16px;">
-                    
-                </p>
-                <video style="width:100%;height:100%;" playsinline controls>
-                    <source src="./files/video_audio_real_youtube.mp4" type="video/mp4">
-                </video>
-                <hr style="margin-top:0px">
-                <p class="text-justify" style="font-size: 16px;">
-                    
-            </div>
-        </div>
+	
 
         <div class="row">
             <div class="col-md-12 col-md-offset-0">
