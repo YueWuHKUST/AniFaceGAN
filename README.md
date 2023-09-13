@@ -27,7 +27,9 @@ and the results will be sorted in ./multiview_imgs/.
 
 - [X] Release inference code
 - [X] Release pretrained checkpoints
+- [ ] Clean up code.
 - [ ] Add detailed instrunctions.
+
 
 ## Citation
 
