@@ -143,7 +143,6 @@ def perturb_points_2(points, z_vals, ray_directions, device, spread):
     points = points + offset * ray_directions.unsqueeze(2).contiguous()
     return points, z_vals
 
-#useful
 def get_intersection_with_MPI(transformed_ray_directions,transformed_ray_origins,device, mpi_start=0.12,mpi_end=-0.12,mpi_num=24):
 
     mpi_z_vals = torch.linspace(mpi_start, mpi_end, mpi_num, device=device)
@@ -188,97 +187,12 @@ def sample_camera_positions(device, n=1, pitch=None,yaw=None, r=1, horizontal_st
     if pitch is not None and yaw is not None:
         phi = pitch
         theta = yaw
-
-    # elif mode == 'uniform':
-    #     theta = (torch.rand((n, 1), device=device) - 0.5) * 2 * horizontal_stddev + horizontal_mean
-    #     phi = (torch.rand((n, 1), device=device) - 0.5) * 2 * vertical_stddev + vertical_mean
-
     elif mode == 'normal' or mode == 'gaussian':
-        #print(device, horizontal_stddev, horizontal_mean)
         theta = torch.randn((n, 1), device=device) * horizontal_stddev + horizontal_mean
         phi = torch.randn((n, 1), device=device) * vertical_stddev + vertical_mean
 
         theta = torch.clamp(theta, horizontal_mean-1.3,horizontal_mean+1.3)
         phi = torch.clamp(phi, vertical_mean-1.3,vertical_mean+1.3)
-    
-    # elif mode == 'hybrid':
-    #     if random.random() < 0.5:
-    #         theta = (torch.rand((n, 1), device=device) - 0.5) * 2 * horizontal_stddev * 2 + horizontal_mean
-    #         phi = (torch.rand((n, 1), device=device) - 0.5) * 2 * vertical_stddev * 2 + vertical_mean
-    #     else:
-    #         theta = torch.randn((n, 1), device=device) * horizontal_stddev + horizontal_mean
-    #         phi = torch.randn((n, 1), device=device) * vertical_stddev + vertical_mean
-    # elif mode == 'spherical_uniform':
-    #     theta = (torch.rand((n, 1), device=device) - .5) * 2 * horizontal_stddev + horizontal_mean
-    #     v_stddev, v_mean = vertical_stddev / math.pi, vertical_mean / math.pi # convert from radians to [0,1]
-    #     v = ((torch.rand((n,1), device=device) - .5) * 2 * v_stddev + v_mean)
-    #     v = torch.clamp(v, 1e-5, 1 - 1e-5)
-    #     phi = torch.arccos(1 - 2 * v)
-
-    # elif mode == 'cuhk':
-    #     view_count_list = [97,    0,    0,    0,    0,    0,    0,    0,    0,    0,   10, 
-    #     1,    0,    0,    2,   73,   16,    3,    1,    0,  390,   44,
-    #     5,    1,    0, 2681,   99,    1,    0,    0, 2277,   71,    0,
-    #     0,    0,  276,    7,    0,    0,    0,   58,    1,    0,    0,
-    #     0,  200,    6,    0,    0,    0,  231,    8,    0,    0,    0,
-    #     2332,   61,    0,    0,    0, 2261,   97,    1,    0,    0,  403,
-    #     33,    5,    0,    0,   84,   11,    3,    1,    0,   22,    2,
-    #     1,    0,    0,    2,    0,    0,    0,    0,  110,    0,    0,
-    #     0,    0,    0,    0,    0,    0,    0,    1,    0,    0,    0,
-    #     0,    1,    0,    3,    7,    6,   83,    0,    0,    2,    0,
-    #     530,    1,    1,    0,    0, 2594,    5,    1,    0,    0, 1493,
-    #     3,    0,    1,    0,  139,    0,    0,    0,    0,   38,   77,
-    #     0,    0,    0,   14,    4,    1,    0,    0,   96,    0,    0,
-    #     0,    0, 1237,    0,    0,    1,    0, 2295,   16,    0,    0,
-    #     0,  557,    0,    0,    0,    0,  100,    0,    0,    0,    0,
-    #     4,    0,    2,    2,    0,    7,    0,    0,    0,    0,   12,
-    #     0,    0,    0,    0]
-
-    #     count_sum = sum(view_count_list)
-    #     view_bin_prob = [count / count_sum for count in view_count_list]
-    #     label_sampled = np.random.choice(a=[i for i in range(len(view_count_list))], size=n, p=view_bin_prob)
-    #     n_azi_id = label_sampled // 5
-    #     n_ele_id = label_sampled - n_azi_id * 5
-    #     batch_view = [[random.uniform(n_azi_id[k] * 10, n_azi_id[k] * 10 + 10) - 90, random.uniform(n_ele_id[k] * 10, n_ele_id[k] * 10 + 10)] for k in range(n)]
-    #     batch_view = np.array(batch_view, dtype=np.float32)
-    #     batch_view = batch_view * math.pi / 180.0
-
-    #     theta = torch.from_numpy(batch_view[:,:1]).to(device) + math.pi*0.5
-    #     phi = torch.from_numpy(batch_view[:,1:]).to(device) + math.pi*0.5
-
-    # elif mode == 'cuhk_uniform':
-    #     view_count_list = [97,    0,    0,    0,    0,    0,    0,    0,    0,    0,   10, 
-    #     1,    0,    0,    2,   73,   16,    3,    1,    0,  390,   44,
-    #     5,    1,    0, 2681,   99,    1,    0,    0, 2277,   71,    0,
-    #     0,    0,  276,    7,    0,    0,    0,   58,    1,    0,    0,
-    #     0,  200,    6,    0,    0,    0,  231,    8,    0,    0,    0,
-    #     2332,   61,    0,    0,    0, 2261,   97,    1,    0,    0,  403,
-    #     33,    5,    0,    0,   84,   11,    3,    1,    0,   22,    2,
-    #     1,    0,    0,    2,    0,    0,    0,    0,  110,    0,    0,
-    #     0,    0,    0,    0,    0,    0,    0,    1,    0,    0,    0,
-    #     0,    1,    0,    3,    7,    6,   83,    0,    0,    2,    0,
-    #     530,    1,    1,    0,    0, 2594,    5,    1,    0,    0, 1493,
-    #     3,    0,    1,    0,  139,    0,    0,    0,    0,   38,   77,
-    #     0,    0,    0,   14,    4,    1,    0,    0,   96,    0,    0,
-    #     0,    0, 1237,    0,    0,    1,    0, 2295,   16,    0,    0,
-    #     0,  557,    0,    0,    0,    0,  100,    0,    0,    0,    0,
-    #     4,    0,    2,    2,    0,    7,    0,    0,    0,    0,   12,
-    #     0,    0,    0,    0]
-
-    #     count_sum = sum(view_count_list)
-    #     view_bin_prob = [count / count_sum for count in view_count_list]
-    #     label_sampled = np.random.choice(a=[i for i in range(len(view_count_list))], size=n, p=view_bin_prob)
-    #     n_azi_id = label_sampled // 5
-    #     n_ele_id = label_sampled - n_azi_id * 5
-    #     batch_view = [[random.uniform(n_azi_id[k] * 10, n_azi_id[k] * 10 + 10) - 90, random.uniform(n_ele_id[k] * 10, n_ele_id[k] * 10 + 10)] for k in range(n)]
-    #     batch_view = np.array(batch_view, dtype=np.float32)
-    #     batch_view = batch_view * math.pi / 180.0
-
-    #     # angles = np.zeros_like(batch_view[:,:1])*
-
-    #     theta = torch.from_numpy(batch_view[:,:1]).to(device) + math.pi*0.5
-    #     theta = torch.ones_like(theta)*torch.rand((n, 1), device=device)*math.pi*2 + math.pi*0.5
-    #     phi = 0*torch.from_numpy(batch_view[:,1:]).to(device) + math.pi*0.5
     else:
         theta = torch.ones((n, 1), device=device, dtype=torch.float) * horizontal_mean
         phi = torch.ones((n, 1), device=device, dtype=torch.float) * vertical_mean
@@ -317,7 +231,6 @@ def create_cam2world_matrix(forward_vector, origin, device=None):
 
     forward_vector = normalize_vecs(forward_vector)
     up_vector = torch.tensor([0, 1, 0], dtype=torch.float, device=device).expand_as(forward_vector)
-    #print("up_vector", up_vector, forward_vector)
     left_vector = normalize_vecs(torch.cross(up_vector, forward_vector, dim=-1))
 
     up_vector = normalize_vecs(torch.cross(forward_vector, left_vector, dim=-1))

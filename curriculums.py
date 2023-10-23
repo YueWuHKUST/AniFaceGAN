@@ -35,8 +35,6 @@ def extract_metadata(curriculum, current_step):
         return_dict[key] = curriculum[key]
     return return_dict
 
-
-# Trained on one RTX 8000. If training on two RTX 6000's, halve the batch size.
 SPATIALSIRENBASELINEGRAM_deform = {
 
     0: {'batch_size': 4, 'num_steps': 24, 'img_size': 128, 'batch_split': 4, 'batch_split_dif': 4, 'gen_lr': 2e-5, 'disc_lr': 2e-4, 'dataset': 'FFHQ128_3dmm_face', 'density_lambda': 20, 'rgb_lambda': 20},

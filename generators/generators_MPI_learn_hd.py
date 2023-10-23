@@ -51,18 +51,31 @@ class ImplicitGenerator3d(nn.Module):
         wp_sample_deform, wp_inter_back_deform, levels, w_ray_origins, w_ray_directions, pitch, yaw, \
                         neutral_face_flag, deform_ddp, alpha, metadata, \
                                     freq=None, phase=None, stage_forward_flag=False):
-        t0 = time.time()
+        """
+        Args:
+            subset_z_id: the identity latent code
+            subset_z_exp: the expression latent code
+            wp_sample_deform: the sampled points in target space in world coorinate system
+            wp_inter_back_deofrom: the intersections between rays and background plane in world coordinate system
+            w_rays_orgins: the world rays origins
+            w_ray_directions: the world rays directions
+            pitch, yaw: camera pose
+        """
+        
         gen_positions = torch.cat([pitch, yaw], -1)
         bs = subset_z_id.size()[0]
+        # Deform the points based on identity and expression, wp_sample_canonic is used for generate the levels, and deform vector is used for deform points from target to canonic
         wp_sample_canonic, w_vec_deform2canonic = deform_ddp(subset_z_id, subset_z_exp, wp_sample_deform)
+        
+        # Compute the intersections in target space and canonical space
         intersections_deform, intersections_canonical, _, is_valid = self.model_sample.get_intersections_with_deform_with_(wp_sample_deform, wp_sample_canonic, w_vec_deform2canonic, levels) # [batch,H*W,num_steps,3]
         transformed_points_canonical = torch.cat([intersections_canonical, wp_inter_back_deform],dim=-2)
         transformed_points_deform = torch.cat([intersections_deform, wp_inter_back_deform], dim=-2)
         is_valid = torch.cat([is_valid,torch.ones(is_valid.shape[0],is_valid.shape[1],1,is_valid.shape[-1]).to(is_valid.device)],dim=-2)
+        # Use radiance generator to generate color and density
         output = self.generate(subset_z_id, subset_noise, transformed_points_deform, transformed_points_canonical, is_valid, \
             w_ray_origins, w_ray_directions, \
             stage=metadata['img_size'], alpha=alpha, freq=freq, phase=phase, stage_forward_flag=stage_forward_flag, **metadata)
-        t3 = time.time()
         
         return gen_positions, output, transformed_points_deform, transformed_points_canonical, is_valid
         

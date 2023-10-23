@@ -471,24 +471,6 @@ class SPATIALSAMPLERELU(nn.Module):
         
         self.gridwarper = UniformBoxWarp(0.24) # Don't worry about this, it was added to ensure compatibility with another model. Shouldn't affect performance.
 
-    def calculate_intersection(self, intervals, vals, levels):
-        intersections = []
-        is_valid = []
-        for interval,val,l in zip(intervals,vals,levels):
-            x_l = interval[:,:,0]
-            x_h = interval[:,:,1]
-            s_l = val[:,:,0]
-            s_h = val[:,:,1]
-            # intersect = ((s_h-l)*x_l + (l-s_l)*x_h)/(s_h-s_l) #[batch,N_rays,3]
-            # with torch.no_grad():
-            #     scale = (s_h-s_l)
-            scale = torch.where(torch.abs(s_h-s_l) > 0.05, s_h-s_l, torch.ones_like(s_h)*0.05)
-            intersect = torch.where(((s_h-l<=0)*(l-s_l<=0)) & (torch.abs(s_h-s_l) > 0.05),((s_h-l)*x_l + (l-s_l)*x_h)/scale,x_h)
-            # if distance is too small, choose the right point
-            intersections.append(intersect)
-            is_valid.append(((s_h-l<=0)*(l-s_l<=0)).to(intersect.dtype))
-        
-        return torch.stack(intersections,dim=-2),torch.stack(is_valid,dim=-2) #[batch,N_rays,level,3]
 
     def calculate_intersection_with_deform_(self, intervals, vals, deforms, levels):
         intersections_deform = []
@@ -501,25 +483,14 @@ class SPATIALSAMPLERELU(nn.Module):
             s_h = val[:,:,1]
             d_l = d_vec[:,:,0]
             d_h = d_vec[:,:,1]
+
             # scale = torch.where(torch.abs(s_h-s_l) > 0.05, s_h-s_l, torch.ones_like(s_h)*0.05)
             # mask = ((s_h-l<=0)*(l-s_l<=0)) & (torch.abs(s_h-s_l) > 0.05)
-            # intersect_deform = torch.where(mask == True, ((s_h-l)*x_l + (l-s_l)*x_h)/scale,x_h)
-            # avg_deform = torch.where(mask == True, ((s_h-l)*d_l + (l-s_l)*d_h)/scale, d_h)
-            # avg_density = torch.where(mask == True, ((s_h-l)*c_d_l + (l-s_l)*c_d_h)/scale, c_d_h)
-            # avg_rgb = torch.where(mask == True, ((s_h-l)*c_rgb_l + (l-s_l)*c_rgb_h)/scale, c_rgb_h)
 
-
-            scale = s_h-s_l#torch.where(torch.abs(s_h-s_l) > 0.05, , torch.ones_like(s_h)*0.05)
+            scale = s_h-s_l #torch.where(torch.abs(s_h-s_l) > 0.05, , torch.ones_like(s_h)*0.05)
             mask = ((s_h-l<=0)*(l-s_l<=0)) #& (torch.abs(s_h-s_l) > 0.05)
             intersect_deform = torch.where(mask == True, ((s_h-l)*x_l + (l-s_l)*x_h)/scale,x_h)
             avg_deform = torch.where(mask == True, ((s_h-l)*d_l + (l-s_l)*d_h)/scale, d_h)
-
-            # intersect_deform = torch.where(((s_h-l<=0)*(l-s_l<=0)) & (torch.abs(s_h-s_l) > 0.05),((s_h-l)*x_l + (l-s_l)*x_h)/scale,x_h)
-            # avg_deform = torch.where(((s_h-l<=0)*(l-s_l<=0)) & (torch.abs(s_h-s_l) > 0.05),((s_h-l)*d_l + (l-s_l)*d_h)/scale, d_h)
-            # avg_density = torch.where(((s_h-l<=0)*(l-s_l<=0)) & (torch.abs(s_h-s_l) > 0.05),((s_h-l)*c_d_l + (l-s_l)*c_d_h)/scale, c_d_h)
-            # avg_rgb = torch.where(((s_h-l<=0)*(l-s_l<=0)) & (torch.abs(s_h-s_l) > 0.05),((s_h-l)*c_rgb_l + (l-s_l)*c_rgb_h)/scale, c_rgb_h)
-
-
             intersect_canonical = intersect_deform + avg_deform
 
 
@@ -543,7 +514,7 @@ class SPATIALSAMPLERELU(nn.Module):
 
     def get_intersections_with_deform_with_(self, wp_sample_deform, wp_sample_canonic, vec_deform2canonic, levels, **kwargs):
         '''
-        The func for 
+        The func for calculating the intersections between rays and manifolds
         '''
         # levels num_l
         batch,N_rays,N_points,_ = wp_sample_canonic.shape
@@ -593,57 +564,12 @@ class SPATIALSAMPLERELU(nn.Module):
         
         intersections_deform, intersections_canonical, is_valid = self.calculate_intersection_with_deform_(x_interval, s_interval, deform_interval, \
                                                                                                         levels)
- 
-        # intersections = self.gridwarper.forward_inv(intersections)
+
         
         return intersections_deform, intersections_canonical, s, is_valid
 
-    def get_intersections(self, input, levels, **kwargs):
-        # levels num_l
-        batch,N_rays,N_points,_ = input.shape
-        
-        x = input.reshape(batch,-1,3)
-        x = self.gridwarper(x)
 
-        # x += torch.tensor([[0,0,1.5]]).to(x.device)
-        # x[...,2] += 1
-        # x = x + torch.tensor([[0,0,1.5]]).to(x.device)
-        x = x - self.center.to(x.device)
-
-        # use a light wight MLP network to process a point x, and predict a scalar value s
-        x = self.network(x)
-        s = self.output_layer(x)
-
-        s = s.reshape(batch,N_rays,N_points,1)
-        s_l = s[:,:,:-1]
-        s_h = s[:,:,1:]
-
-        # cost 
-        cost = torch.linspace(N_points-1,0,N_points-1).float().to(input.device).reshape(1,1,-1,1)
-        # shape is batch_size x 1 x [N_points - 1] x 1, ranges from N_points -1, 0
-
-        x_interval = []
-        s_interval = []
-        for l in levels:
-            r = torch.sign((s_h-l)*(l-s_l)) # [batch,N_rays,N_points-1]
-            # on the two sides of the plane, the sign is negative. when the two sides across the plane, the sign is positive.
-            r = r*cost
-            _, indices = torch.max(r,dim=-2,keepdim=True)
-            x_l_select = torch.gather(input,-2,indices.expand(-1, -1, -1, 3)) # [batch,N_rays,1]
-            x_h_select = torch.gather(input,-2,indices.expand(-1, -1, -1, 3)+1) # [batch,N_rays,1]
-            s_l_select = torch.gather(s_l,-2,indices)
-            s_h_select = torch.gather(s_h,-2,indices)
-            # gather the x coordinates and scalar
-            x_interval.append(torch.cat([x_l_select,x_h_select],dim=-2))
-            s_interval.append(torch.cat([s_l_select,s_h_select],dim=-2))
-        
-        intersections,is_valid = self.calculate_intersection(x_interval,s_interval,levels)
-
-        # intersections = self.gridwarper.forward_inv(intersections)
-        
-        return intersections,s,is_valid
-
-
+# The expression deformation network
 class SPATIAL_SIREN_DEFORM(nn.Module):
     def __init__(self, input_dim=2, z_dim=100, hidden_dim=128, output_dim=1, device=None, phase_noise=False, hidden_z_dim=128,  **kwargs):
         super().__init__()

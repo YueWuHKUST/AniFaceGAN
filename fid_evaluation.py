@@ -1,31 +1,20 @@
 from __future__ import print_function
-import os
-import shutil
+import os, shutil, time, math, glob, copy, argparse, importlib
 import torch
-
-from torch_fidelity import calculate_metrics
+import torch_fidelity
 from torchvision.utils import save_image
 from pytorch_fid import fid_score
 import datasets
 from tqdm import tqdm
-import copy
-import argparse
 import curriculums
 
 from generators import generators_MPI_learn_hd as generators
 from siren import siren
-import math
-import time
-import importlib
-
 from logging import shutdown
-import os
 import numpy as np
-import math
 from collections import deque
 
 from yaml import parse
-import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import torch.nn as nn
@@ -33,28 +22,18 @@ import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchvision.utils import save_image
 import torchvision.transforms as transforms
-import importlib
-import time 
-import glob, shutil
 from scipy.io import loadmat
-from siren import siren
 import fid_evaluation
-import datasets
-import curriculums
-from tqdm import tqdm
 from datetime import datetime
-import copy
 from torch_ema import ExponentialMovingAverage
-import pytorch3d
-# from loss import *
 from torch.utils.tensorboard import SummaryWriter
-from torch_ema import ExponentialMovingAverage
-import argparse
 import util
-device = torch.device('cuda')
-from PIL import Image 
-import torch_fidelity
 
+from PIL import Image 
+
+
+
+device = torch.device('cuda')
 def staged_forward(fixed_exp_z, fixed_id_z, fixed_noise_z, generator_ddp, deform_ddp, vae_net_id, vae_net_exp, stage, alpha, metadata, opt):
     '''
     real_imgs - 
@@ -137,6 +116,7 @@ def setup_evaluation(dataset_name, dataset, generated_dir, target_size=128):
     return real_dir#, dataloader
 
 def output_images(dataloader, generator, deform, input_metadata, rank, world_size, output_dir, alpha, num_imgs=10):
+    # function of generating images using identity and expression from dataset
     metadata = copy.deepcopy(input_metadata)
     metadata['img_size'] = 128
     metadata['batch_size'] = 4
@@ -342,24 +322,15 @@ if __name__ == '__main__':
     vae_net_exp = vae_net_exp.to(device)
     vae_net_exp.eval()
 
-    # from FaceRecon_Pytorch.models import create_model
-    # bfm_model = create_model(opt, metadata)
-    # bfm_model = bfm_model.to(device)
-    # bfm_model.set_device(device)
-    # bfm_model.eval()
-
-    # assert(opt.num_images % discriminator_batch_size == 0)
-    i = 0
     for img_counter in tqdm(range(opt.num_images)):
         torch.manual_seed(img_counter)
         
         with torch.no_grad():
+            # For FID calculation, sample identity code, expression code and camera pose each iteration
             z_id, z_exp = sample_latents(1, device, vae_net_id, vae_net_exp, metadata)
             z_noise = z_sampler((1, 80), device=device, dist='gaussian') 
             img = staged_forward(z_exp, z_id, z_noise, generator, dif_model, vae_net_id, vae_net_exp, stage=128, alpha=1, metadata=metadata, opt=opt)[0]
             save_image(img, os.path.join(opt.output_dir, f'{img_counter:0>5}.png'), normalize=True, range=(-1, 1))
-            # img = generator.staged_forward(z, max_batch_size=max_batch_size, randomize=True,stage=128,alpha=1, **metadata)[0].to(device)
-        i += 1
     
     metrics_dict = torch_fidelity.calculate_metrics(input1=opt.output_dir, input2=real_images_dir, cuda=True, isc=True, fid=True, kid=True, ppl=False, verbose=True)
     print(metrics_dict)
