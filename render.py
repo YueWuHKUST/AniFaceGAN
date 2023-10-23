@@ -1,7 +1,4 @@
-from asyncio import FIRST_COMPLETED
-from logging import shutdown
 import os
-from matplotlib.pyplot import prism
 import numpy as np
 import math
 from collections import deque
@@ -19,18 +16,17 @@ import importlib
 import time 
 import glob, shutil
 from scipy.io import loadmat
-# from generators import generators_neutex as generators
 from siren import siren
 import curriculums
 import copy, plyfile
 from torch_ema import ExponentialMovingAverage
-import pytorch3d
-from torch_ema import ExponentialMovingAverage
 import argparse
 import util as util
-device = torch.device('cuda') #if torch.cuda.is_available() else 'cpu')
 from PIL import Image 
 import skvideo
+
+
+device = torch.device('cuda') #if torch.cuda.is_available() else 'cpu')
 
 def visualization(img_size, intersections_deform, is_valid, opt, step, intersections_canonic):
     # save intersections
@@ -112,14 +108,15 @@ def show(tensor_img):
 
 def staged_forward(z_id, z_exp, noise, generator_ddp, deform_ddp, neutral_face_flag, stage, alpha, metadata, opt):
     '''
-    real_imgs - 
-    generator_ddp - 
-    ema, ema2 - 
-    alpha - the prograssive growing factor, either 1 or below 1
-    scalar - the image scale ? 
-    metadata - config files
+    Input args:
+        z_id: the identity latent code
+        z_exp: the expression latent code
+        noise: the noise code controling other factors like the appereance
+        generator_ddp: the radiance generator
+        deform_ddp: the deformation network to perform expression deformation
+        neutral_face_flag: whether generate neutral expression
     '''
-    psi = 0.7
+    psi = opt.psi
     device = z_exp.device
     img_size = metadata['img_size']
     batch_size = z_exp.shape[0]
@@ -138,11 +135,7 @@ def staged_forward(z_id, z_exp, noise, generator_ddp, deform_ddp, neutral_face_f
             subset_z_exp = z_exp[split * split_batch_size:(split+1) * split_batch_size]
             subset_z_id = z_id[split * split_batch_size:(split+1) * split_batch_size]
             subset_noise = noise[split * split_batch_size:(split+1) * split_batch_size]
-            # ------------------------------------------ obtain 3dmm neutral face here-------------------------------------------
-            t = time.time()
-            
-            #print("generate face takes", time.time() - t)
-
+            # ------------------------------------------ obtain 3DMM deformation -------------------------------------------
             z = torch.cat([subset_z_id, subset_noise], dim=1)
             batch_size = subset_z_exp.size()[0]
 
@@ -150,17 +143,14 @@ def staged_forward(z_id, z_exp, noise, generator_ddp, deform_ddp, neutral_face_f
             if not psi == 1:
                 truncated_frequencies = generator_ddp.avg_frequencies + psi * (raw_frequencies - generator_ddp.avg_frequencies)
                 truncated_phase_shifts = generator_ddp.avg_phase_shifts + psi * (raw_phase_shifts - generator_ddp.avg_phase_shifts)
-                # print("psi not = 1")
             else:
                 truncated_frequencies = raw_frequencies
                 truncated_phase_shifts = raw_phase_shifts
 
+            # ------------------------------------------- Network Forward ----------------------------------------------------------
             with torch.no_grad():
                 wp_sample_deform, wp_inter_back_deform, levels, w_ray_origins, w_ray_directions, pitch, yaw, cam2world = generator_ddp.generate_points(subset_z_exp.size()[0], subset_z_exp.device, **metadata)
-            t = time.time()
             bs, N_rays, N_steps, _ = wp_sample_deform.size()
-            t2 = time.time()
-            #print("generate data time = ", t2-t)
             gen_positions, output, intersections_deform, intersections_canonical, is_valid = \
                                                                     generator_ddp.forward(subset_z_id, subset_z_exp, subset_noise, \
                                                                         wp_sample_deform, wp_inter_back_deform, levels, w_ray_origins, w_ray_directions, pitch, yaw, \
@@ -177,6 +167,7 @@ def staged_forward(z_id, z_exp, noise, generator_ddp, deform_ddp, neutral_face_f
 
             pixels_all.append(gen_imgs)
             weight_list.append(weights)
+
 
             depth_map = depth.reshape(batch_size, img_size, img_size).contiguous()
             depth_all.append(depth_map)
@@ -283,10 +274,7 @@ def tensor_to_PIL(img):
 
 if __name__ == '__main__':
 
-    inter_i  = 22
-
     parser = argparse.ArgumentParser()
-    # parser.add_argument('path', type=str)
     parser.add_argument('--generator_file', type=str, default='results/20220301-064028_warm_up_deform_0_switch_interval_2_DIF_lambda_4000_ths_0.000100_gen_gt/generator.pth')
     parser.add_argument('--deform_file', type=str, default='results/20220301-064028_warm_up_deform_0_switch_interval_2_DIF_lambda_4000_ths_0.000100_gen_gt/dif.pth')
     parser.add_argument('--seeds', nargs='+', default=[0, 1, 2])
@@ -334,11 +322,11 @@ if __name__ == '__main__':
     parser.add_argument('--to_gram', type=str, default='v1')
     parser.add_argument('--gen_video', action='store_true', help='whether generate video')
     parser.add_argument('--use_depth', action='store_true', help='whether use depth loss for geomotry generation')
+
+    parser.add_argument('--psi', type=float, default=0.7)
     opt = parser.parse_args()
     
     os.makedirs(opt.output_dir, exist_ok=True)
-
-    # generator = torch.load(opt.path, map_location=torch.device(device))
 
     # load configs
     curriculum = getattr(curriculums, opt.curriculum)
@@ -362,13 +350,6 @@ if __name__ == '__main__':
     ema.copy_to(generator.parameters())
     generator.set_device(device)
     generator.eval()
-
-    # load deformnet
-    # dif_net = importlib.import_module('siren.siren')
-    # dif_model = getattr(dif_net, 'DeformedImplicitField')()
-
-    # dif_net = importlib.import_module('dif_net.dif_net')
-    # dif_model = getattr(dif_net, 'DeformedImplicitField')()
 
     dif_net = importlib.import_module('siren.siren')
     dif_model = getattr(dif_net, 'SPATIAL_SIREN_DEFORM')(input_dim=7, z_dim=64+80, output_dim=7)
@@ -431,14 +412,16 @@ if __name__ == '__main__':
 
     trajectory = []
     num_steps = 50
-    yaw_all = np.linspace(-0.35,0.35, num_steps)
+    yaw_all = np.linspace(-0.35, 0.35, num_steps)
+    
+    # If you want to change the rendering camera pose, modify here
     for t in range(num_steps):
-        # t=pose_ratio[19]
-        pitch = math.pi/2 #0.2 * np.cos(t * 2 * math.pi) + math.pi/2
+        pitch = math.pi/2
         yaw = yaw_all[t] + math.pi/2
         fov = 12
         trajectory.append((pitch, yaw, fov))
 
+    # The seeds of generating the avatars
     seeds = [814, 1019, 1076]
 
     import torch.nn.functional as F
@@ -467,7 +450,6 @@ if __name__ == '__main__':
     with torch.no_grad():
         generator.generate_avg_frequencies(vae_net_id, vae_net_exp)
         for seed in seeds:
-            flag = True
             images = []
             depths = []
             torch.manual_seed(seed)
@@ -489,15 +471,14 @@ if __name__ == '__main__':
                 options_dict['h_stddev'] = 0
                 options_dict['v_stddev'] = 0
 
-                i = 0
                 img, tensor_img = generate_img(generator, dif_model, z_id, z_exp, noise, False, options_dict)
                 
                 import PIL.ImageDraw as ImageDraw
                 img = Image.new('L', (opt.image_size, opt.image_size), 0)
                 bs, _, img_size, _ = tensor_img.size()
-                save_image(tensor_img, os.path.join(cnt_output_dir, "pred_img_%04d_exp_%04d_%03d_.png"%(seed, exp_id, i)), normalize=True,range=(-1,1))
-                i += 1
+                save_image(tensor_img, os.path.join(cnt_output_dir, "pred_img_%04d_exp_%04d.png"%(seed, exp_id)), normalize=True, range=(-1,1))
                 frames.append(tensor_to_PIL(tensor_img))
+
             for frame in frames:
                 writer.writeFrame(np.array(frame))
                 
